@@ -1,8 +1,12 @@
 const canvas = document.querySelector("#game");
 const ctx = canvas.getContext("2d");
 const coinCount = document.querySelector("#coin-count");
+const scoreCount = document.querySelector("#score-count");
 const gameMessage = document.querySelector("#game-message");
 const resultOverlay = document.querySelector("#result-overlay");
+const resultIcon = document.querySelector("#result-icon");
+const resultEyebrow = document.querySelector("#result-eyebrow");
+const resultTitle = document.querySelector("#result-title");
 const resultCopy = document.querySelector("#result-copy");
 
 const WIDTH = canvas.width;
@@ -42,19 +46,31 @@ const enemySpots = [
 let player;
 let coins;
 let enemies;
+let score = 0;
 let cameraX = 0;
 let won = false;
 let lastTime = 0;
 
 function resetGame() {
-  player = { x: 70, y: 400, width: 32, height: 46, vx: 0, vy: 0, grounded: false, facing: 1, hitCooldown: 0 };
+  player = { x: 70, y: 400, width: 32, height: 46, vx: 0, vy: 0, grounded: false, facing: 1 };
   coins = coinSpots.map(([x, y]) => ({ x, y, collected: false }));
   enemies = enemySpots.map((enemy) => ({ ...enemy, direction: 1, defeated: false }));
+  score = 0;
   cameraX = 0;
   won = false;
   coinCount.textContent = "0";
+  scoreCount.textContent = formatScore(score);
   gameMessage.textContent = "旗まで進もう！";
   resultOverlay.hidden = true;
+}
+
+function formatScore(value) {
+  return String(value).padStart(6, "0");
+}
+
+function addScore(points) {
+  score += points;
+  scoreCount.textContent = formatScore(score);
 }
 
 function jump() {
@@ -79,7 +95,6 @@ function update(delta) {
   player.y += player.vy * step;
   player.grounded = false;
 
-  player.hitCooldown = Math.max(0, player.hitCooldown - step);
   for (const enemy of enemies) {
     if (enemy.defeated) continue;
     enemy.x += enemy.speed * enemy.direction * step;
@@ -96,13 +111,11 @@ function update(delta) {
       enemy.defeated = true;
       player.y = enemy.y - player.height;
       player.vy = JUMP_SPEED * 0.58;
+      addScore(200);
       gameMessage.textContent = "敵をふみつけた！";
-    } else if (player.hitCooldown === 0) {
-      player.vx = -enemy.direction * 5.5;
-      player.vy = -5.5;
-      player.grounded = false;
-      player.hitCooldown = 48;
-      gameMessage.textContent = "敵にぶつかった！ジャンプでよけよう";
+    } else {
+      finishGame(false);
+      return;
     }
   }
 
@@ -132,6 +145,7 @@ function update(delta) {
       coin.collected = true;
       const remaining = coins.filter((item) => !item.collected).length;
       coinCount.textContent = String(coins.length - remaining);
+      addScore(100);
       gameMessage.textContent = remaining ? "いいね！その調子！" : "コインを全部集めた！";
     }
   }
@@ -140,11 +154,15 @@ function update(delta) {
   if (player.x > WORLD_WIDTH - 180) finishGame();
 }
 
-function finishGame() {
+function finishGame(cleared = true) {
   won = true;
   const collected = coins.filter((coin) => coin.collected).length;
-  gameMessage.textContent = "冒険クリア！";
-  resultCopy.textContent = `コインを ${collected} / ${coins.length} 枚集めました。`;
+  resultOverlay.classList.toggle("game-over", !cleared);
+  resultIcon.textContent = cleared ? "🏁" : "✕";
+  resultEyebrow.textContent = cleared ? "ADVENTURE COMPLETE" : "ADVENTURE OVER";
+  resultTitle.textContent = cleared ? "ゴール！" : "ゲームオーバー";
+  gameMessage.textContent = cleared ? "冒険クリア！" : "敵にぶつかった！";
+  resultCopy.textContent = `スコア ${formatScore(score)} ／ コイン ${collected} / ${coins.length} 枚`;
   resultOverlay.hidden = false;
 }
 
