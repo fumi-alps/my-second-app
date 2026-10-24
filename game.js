@@ -42,6 +42,22 @@ const coinSpots = [
 const enemySpots = [
   { x: 535, minX: 505, maxX: 665, y: 436, width: 36, height: 34, speed: 0.9 },
 ];
+const distantBuildings = [
+  { x: 0, width: 88, height: 115 }, { x: 98, width: 67, height: 157 },
+  { x: 176, width: 112, height: 128 }, { x: 299, width: 74, height: 184 },
+  { x: 385, width: 102, height: 142 }, { x: 497, width: 78, height: 172 },
+  { x: 589, width: 121, height: 119 }, { x: 722, width: 84, height: 161 },
+];
+const streetBuildings = [
+  { x: 0, width: 118, height: 184, sign: "新宿", color: "#ff4fc8" },
+  { x: 128, width: 92, height: 238, sign: "歌舞伎町", color: "#45f4dc", vertical: true },
+  { x: 230, width: 142, height: 165, sign: "RAMEN", color: "#ffbd4a" },
+  { x: 382, width: 105, height: 210, sign: "ゲーム", color: "#ff4fc8", vertical: true },
+  { x: 497, width: 126, height: 180, sign: "HOTEL", color: "#45f4dc" },
+  { x: 633, width: 104, height: 250, sign: "ネオン", color: "#ffbd4a", vertical: true },
+  { x: 747, width: 142, height: 194, sign: "居酒屋", color: "#ff4fc8" },
+  { x: 899, width: 94, height: 225, sign: "新宿", color: "#45f4dc", vertical: true },
+];
 
 let player;
 let coins;
@@ -168,96 +184,118 @@ function finishGame(cleared = true) {
 
 function drawBackground(time) {
   const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  gradient.addColorStop(0, "#111a3d");
-  gradient.addColorStop(0.58, "#344c78");
-  gradient.addColorStop(1, "#f19a83");
+  gradient.addColorStop(0, "#080b20");
+  gradient.addColorStop(0.58, "#171331");
+  gradient.addColorStop(1, "#382044");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  const horizon = ctx.createLinearGradient(0, 300, 0, 490);
-  horizon.addColorStop(0, "rgba(253, 178, 147, 0)");
-  horizon.addColorStop(1, "rgba(252, 151, 139, .28)");
-  ctx.fillStyle = horizon;
-  ctx.fillRect(0, 280, WIDTH, 210);
+  const cityGlow = ctx.createRadialGradient(490, 390, 20, 490, 390, 460);
+  cityGlow.addColorStop(0, "rgba(255, 48, 173, .2)");
+  cityGlow.addColorStop(.48, "rgba(106, 44, 170, .12)");
+  cityGlow.addColorStop(1, "rgba(106, 44, 170, 0)");
+  ctx.fillStyle = cityGlow;
+  ctx.fillRect(0, 100, WIDTH, 440);
 
-  for (let i = 0; i < 68; i += 1) {
+  for (let i = 0; i < 46; i += 1) {
     const starX = ((i * 173 + 47) % WIDTH - cameraX * (0.025 + (i % 4) * 0.008) + WIDTH * 4) % WIDTH;
-    const starY = (i * 89 + 19) % 285;
+    const starY = (i * 89 + 19) % 245;
     const twinkle = 0.55 + Math.sin(time / 500 + i * 2.4) * 0.3;
     ctx.globalAlpha = twinkle;
-    ctx.fillStyle = i % 7 === 0 ? "#a9f7f2" : "#fff1cf";
+    ctx.fillStyle = i % 7 === 0 ? "#a9f7f2" : "#e3d7ff";
     ctx.fillRect(starX, starY, i % 7 === 0 ? 2 : 1.5, i % 7 === 0 ? 2 : 1.5);
   }
   ctx.globalAlpha = 1;
 
-  const moonX = 785 - cameraX * 0.08;
-  const moonGlow = ctx.createRadialGradient(moonX, 105, 12, moonX, 105, 95);
-  moonGlow.addColorStop(0, "rgba(255, 216, 161, .3)");
-  moonGlow.addColorStop(1, "rgba(255, 216, 161, 0)");
-  ctx.fillStyle = moonGlow;
-  ctx.fillRect(moonX - 100, 5, 200, 200);
-  ctx.fillStyle = "#ffe4b4";
-  ctx.beginPath();
-  ctx.arc(moonX, 105, 27, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(209, 151, 133, .26)";
-  ctx.beginPath();
-  ctx.arc(moonX + 8, 99, 5, 0, Math.PI * 2);
-  ctx.arc(moonX - 9, 112, 3, 0, Math.PI * 2);
-  ctx.fill();
-
-  drawMountainLayer(0.1, 355, "#283957", 0);
-  drawMountainLayer(0.19, 410, "#202f50", 75);
-  drawCloud(125 - cameraX * 0.16, 170, 1);
-  drawCloud(470 - cameraX * 0.12, 220, .75);
-  drawCloud(860 - cameraX * 0.18, 180, .9);
-  drawHills();
+  drawCityLayer(0.12, 414, 820, distantBuildings, "#11182c", .25);
+  drawCityLayer(0.28, 472, 1020, streetBuildings, "#101426", .8);
 }
 
-function drawCloud(x, y, scale) {
-  x = ((x % (WIDTH + 200)) + WIDTH + 200) % (WIDTH + 200) - 100;
+function drawCityLayer(parallax, baseY, period, buildings, color, windowAlpha) {
+  const offset = cameraX * parallax;
+  const firstTile = Math.floor((offset - WIDTH) / period);
+  const lastTile = Math.ceil((offset + WIDTH) / period);
+
+  for (let tile = firstTile; tile <= lastTile; tile += 1) {
+    for (let buildingIndex = 0; buildingIndex < buildings.length; buildingIndex += 1) {
+      const building = buildings[buildingIndex];
+      const x = tile * period + building.x - offset;
+      if (x + building.width < -10 || x > WIDTH + 10) continue;
+      const y = baseY - building.height;
+
+      ctx.fillStyle = color;
+      ctx.fillRect(x, y, building.width, HEIGHT - y);
+      ctx.fillStyle = "rgba(116, 128, 170, .14)";
+      ctx.fillRect(x + 4, y + 5, 2, HEIGHT - y - 5);
+      ctx.fillStyle = "rgba(4, 7, 19, .42)";
+      ctx.fillRect(x + building.width - 5, y, 5, HEIGHT - y);
+
+      const windowColor = buildingIndex % 3 === 0 ? "#ff4fc8" : "#54e9db";
+      ctx.fillStyle = windowColor;
+      ctx.globalAlpha = windowAlpha;
+      for (let row = y + 13; row < baseY - 12; row += 17) {
+        for (let col = x + 10; col < x + building.width - 8; col += 15) {
+          const windowNumber = Math.floor((col + offset) / 15) + Math.floor(row / 17) * 3 + buildingIndex;
+          if (windowNumber % 4 !== 0) ctx.fillRect(col, row, 5, 7);
+        }
+      }
+      ctx.globalAlpha = 1;
+
+      if (buildingIndex % 3 === 1) {
+        ctx.fillStyle = "#ff4fc8";
+        ctx.shadowColor = "#ff4fc8";
+        ctx.shadowBlur = 9;
+        ctx.fillRect(x + 8, y + 8, building.width - 16, 2);
+        ctx.shadowBlur = 0;
+      }
+
+      if (building.sign) {
+        drawNeonSign(x + (building.vertical ? building.width - 34 : 8), y + 24,
+          building.vertical ? 25 : building.width - 16, building.vertical ? 92 : 28,
+          building.sign, building.color, building.vertical);
+      } else if (buildingIndex % 2 === 0) {
+        drawNeonSign(x + 9, y + 17, building.width - 18, 19,
+          buildingIndex % 4 === 0 ? "NIGHT" : "TOKYO", windowColor, false);
+      }
+
+      if (building.height > 175 && buildingIndex % 2 === 0) {
+        ctx.strokeStyle = "rgba(147, 158, 196, .52)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x + building.width / 2, y);
+        ctx.lineTo(x + building.width / 2, y - 13);
+        ctx.stroke();
+        ctx.fillStyle = "#ff4fc8";
+        ctx.fillRect(x + building.width / 2 - 2, y - 15, 4, 3);
+      }
+    }
+  }
+}
+
+function drawNeonSign(x, y, width, height, label, color, vertical) {
   ctx.save();
-  ctx.translate(x, y);
-  ctx.scale(scale, scale);
-  ctx.fillStyle = "rgba(33, 47, 77, .65)";
-  ctx.beginPath();
-  ctx.arc(0, 12, 24, 0, Math.PI * 2);
-  ctx.arc(27, 1, 31, 0, Math.PI * 2);
-  ctx.arc(57, 12, 22, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.fillStyle = "rgba(124, 150, 184, .16)";
-  ctx.fillRect(0, 23, 58, 3);
-  ctx.restore();
-}
-
-function drawMountainLayer(parallax, baseY, color, offset) {
-  const shift = (cameraX * parallax) % 280;
+  ctx.fillStyle = "rgba(11, 10, 26, .88)";
+  ctx.fillRect(x, y, width, height);
+  ctx.strokeStyle = color;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 10;
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x + 1, y + 1, width - 2, height - 2);
+  ctx.shadowBlur = 0;
   ctx.fillStyle = color;
-  ctx.beginPath();
-  ctx.moveTo(-300, HEIGHT);
-  for (let i = -2; i < 7; i += 1) {
-    const x = i * 280 - shift + offset;
-    const peak = baseY - (65 + (i * 37 % 75));
-    ctx.lineTo(x, baseY);
-    ctx.lineTo(x + 120, peak);
-    ctx.lineTo(x + 280, baseY);
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  ctx.font = vertical ? "bold 13px sans-serif" : `bold ${Math.min(13, height - 7)}px sans-serif`;
+  ctx.shadowColor = color;
+  ctx.shadowBlur = 8;
+  if (vertical) {
+    [...label].forEach((character, index) => {
+      ctx.fillText(character, x + width / 2, y + 12 + index * 16);
+    });
+  } else {
+    ctx.fillText(label, x + width / 2, y + height / 2, width - 6);
   }
-  ctx.lineTo(WIDTH + 300, HEIGHT);
-  ctx.closePath();
-  ctx.fill();
-}
-
-function drawHills() {
-  ctx.fillStyle = "#263b58";
-  ctx.beginPath();
-  ctx.moveTo(0, 425);
-  for (let x = -60; x <= WIDTH + 60; x += 180) {
-    const y = 390 + Math.sin((x + cameraX * .12) * .009) * 24;
-    ctx.quadraticCurveTo(x + 75, y - 55, x + 180, 410);
-  }
-  ctx.lineTo(WIDTH, HEIGHT);
-  ctx.lineTo(0, HEIGHT);
-  ctx.fill();
+  ctx.restore();
 }
 
 function drawPlatform(platform) {
