@@ -4,12 +4,14 @@
   color-scheme: dark;
   font-family: "Nunito", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
   color: #f4f6ff;
-  background: #101b35;
+  background:
+    radial-gradient(ellipse at 50% 39%, rgba(57, 76, 131, .28), transparent 52%),
+    linear-gradient(155deg, #111a35 0%, #10172d 100%);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   --muted: #9ba9c7;
-  --cyan: #74e0dd;
+  --cyan: #80f0cf;
 }
 
 * { box-sizing: border-box; }
@@ -63,8 +65,8 @@ h1 { margin: 0; font-size: clamp(29px, 5vw, 43px); font-weight: 900; letter-spac
   overflow: hidden;
   border: 1px solid rgba(193, 210, 245, .17);
   border-radius: 15px;
-  background: #182644;
-  box-shadow: 0 24px 70px rgba(3, 9, 23, .3), 0 1px 0 rgba(255,255,255,.04) inset;
+  background: linear-gradient(145deg, #1b2b4b, #131f39);
+  box-shadow: 0 28px 80px rgba(3, 8, 22, .45), 0 1px 0 rgba(255,255,255,.06) inset;
 }
 
 .game-hud { height: 69px; display: flex; align-items: center; justify-content: space-between; padding: 0 23px; }
@@ -78,7 +80,7 @@ h1 { margin: 0; font-size: clamp(29px, 5vw, 43px); font-weight: 900; letter-spac
 .restart-button:hover { border-color: rgba(193, 210, 245, .4); background: rgba(255,255,255,.04); }
 .restart-button span { margin-left: 3px; font-size: 11px; }
 
-.canvas-wrap { position: relative; overflow: hidden; background: #94c9e1; }
+.canvas-wrap { position: relative; overflow: hidden; background: #202849; }
 canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
 
 .result-overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(13, 25, 49, .48); backdrop-filter: blur(5px); }

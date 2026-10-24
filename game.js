@@ -116,21 +116,51 @@ function finishGame() {
   resultOverlay.hidden = false;
 }
 
-function drawBackground() {
+function drawBackground(time) {
   const gradient = ctx.createLinearGradient(0, 0, 0, HEIGHT);
-  gradient.addColorStop(0, "#87c8e4");
-  gradient.addColorStop(1, "#d5e8e4");
+  gradient.addColorStop(0, "#111a3d");
+  gradient.addColorStop(0.58, "#344c78");
+  gradient.addColorStop(1, "#f19a83");
   ctx.fillStyle = gradient;
   ctx.fillRect(0, 0, WIDTH, HEIGHT);
 
-  ctx.fillStyle = "rgba(255, 245, 204, .72)";
+  const horizon = ctx.createLinearGradient(0, 300, 0, 490);
+  horizon.addColorStop(0, "rgba(253, 178, 147, 0)");
+  horizon.addColorStop(1, "rgba(252, 151, 139, .28)");
+  ctx.fillStyle = horizon;
+  ctx.fillRect(0, 280, WIDTH, 210);
+
+  for (let i = 0; i < 68; i += 1) {
+    const starX = ((i * 173 + 47) % WIDTH - cameraX * (0.025 + (i % 4) * 0.008) + WIDTH * 4) % WIDTH;
+    const starY = (i * 89 + 19) % 285;
+    const twinkle = 0.55 + Math.sin(time / 500 + i * 2.4) * 0.3;
+    ctx.globalAlpha = twinkle;
+    ctx.fillStyle = i % 7 === 0 ? "#a9f7f2" : "#fff1cf";
+    ctx.fillRect(starX, starY, i % 7 === 0 ? 2 : 1.5, i % 7 === 0 ? 2 : 1.5);
+  }
+  ctx.globalAlpha = 1;
+
+  const moonX = 785 - cameraX * 0.08;
+  const moonGlow = ctx.createRadialGradient(moonX, 105, 12, moonX, 105, 95);
+  moonGlow.addColorStop(0, "rgba(255, 216, 161, .3)");
+  moonGlow.addColorStop(1, "rgba(255, 216, 161, 0)");
+  ctx.fillStyle = moonGlow;
+  ctx.fillRect(moonX - 100, 5, 200, 200);
+  ctx.fillStyle = "#ffe4b4";
   ctx.beginPath();
-  ctx.arc(785 - cameraX * 0.08, 95, 37, 0, Math.PI * 2);
+  ctx.arc(moonX, 105, 27, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "rgba(209, 151, 133, .26)";
+  ctx.beginPath();
+  ctx.arc(moonX + 8, 99, 5, 0, Math.PI * 2);
+  ctx.arc(moonX - 9, 112, 3, 0, Math.PI * 2);
   ctx.fill();
 
-  drawCloud(125 - cameraX * 0.16, 130, 1);
-  drawCloud(470 - cameraX * 0.12, 195, .75);
-  drawCloud(860 - cameraX * 0.18, 145, .9);
+  drawMountainLayer(0.1, 355, "#283957", 0);
+  drawMountainLayer(0.19, 410, "#202f50", 75);
+  drawCloud(125 - cameraX * 0.16, 170, 1);
+  drawCloud(470 - cameraX * 0.12, 220, .75);
+  drawCloud(860 - cameraX * 0.18, 180, .9);
   drawHills();
 }
 
@@ -139,21 +169,40 @@ function drawCloud(x, y, scale) {
   ctx.save();
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  ctx.fillStyle = "rgba(255, 255, 255, .63)";
+  ctx.fillStyle = "rgba(33, 47, 77, .65)";
   ctx.beginPath();
   ctx.arc(0, 12, 24, 0, Math.PI * 2);
   ctx.arc(27, 1, 31, 0, Math.PI * 2);
   ctx.arc(57, 12, 22, 0, Math.PI * 2);
   ctx.fill();
+  ctx.fillStyle = "rgba(124, 150, 184, .16)";
+  ctx.fillRect(0, 23, 58, 3);
   ctx.restore();
 }
 
+function drawMountainLayer(parallax, baseY, color, offset) {
+  const shift = (cameraX * parallax) % 280;
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(-300, HEIGHT);
+  for (let i = -2; i < 7; i += 1) {
+    const x = i * 280 - shift + offset;
+    const peak = baseY - (65 + (i * 37 % 75));
+    ctx.lineTo(x, baseY);
+    ctx.lineTo(x + 120, peak);
+    ctx.lineTo(x + 280, baseY);
+  }
+  ctx.lineTo(WIDTH + 300, HEIGHT);
+  ctx.closePath();
+  ctx.fill();
+}
+
 function drawHills() {
-  ctx.fillStyle = "#a8d6cb";
+  ctx.fillStyle = "#263b58";
   ctx.beginPath();
   ctx.moveTo(0, 425);
   for (let x = -60; x <= WIDTH + 60; x += 180) {
-    const y = 365 + Math.sin((x + cameraX * .12) * .009) * 28;
+    const y = 390 + Math.sin((x + cameraX * .12) * .009) * 24;
     ctx.quadraticCurveTo(x + 75, y - 55, x + 180, 410);
   }
   ctx.lineTo(WIDTH, HEIGHT);
@@ -164,17 +213,50 @@ function drawHills() {
 function drawPlatform(platform) {
   const x = platform.x - cameraX;
   if (x + platform.width < -20 || x > WIDTH + 20) return;
-  ctx.fillStyle = "#568e79";
-  ctx.fillRect(x, platform.y, platform.width, 15);
-  ctx.fillStyle = "#78b889";
-  ctx.fillRect(x, platform.y, platform.width, 7);
-  ctx.fillStyle = "rgba(241, 255, 214, .35)";
-  ctx.fillRect(x + 8, platform.y + 2, Math.max(0, platform.width - 16), 2);
-  ctx.fillStyle = "#c6a982";
-  ctx.fillRect(x, platform.y + 15, platform.width, HEIGHT - platform.y);
-  ctx.fillStyle = "rgba(123, 89, 87, .15)";
-  for (let mark = x + 14; mark < x + platform.width; mark += 35) {
-    ctx.fillRect(mark, platform.y + 27, 13, 3);
+  const body = ctx.createLinearGradient(0, platform.y + 8, 0, HEIGHT);
+  body.addColorStop(0, "#344760");
+  body.addColorStop(1, "#17243d");
+  ctx.fillStyle = body;
+  ctx.beginPath();
+  ctx.moveTo(x, platform.y + 8);
+  ctx.lineTo(x + platform.width, platform.y + 8);
+  ctx.lineTo(x + platform.width - 10, HEIGHT);
+  ctx.lineTo(x + 10, HEIGHT);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#32a99d";
+  ctx.beginPath();
+  ctx.roundRect(x, platform.y, platform.width, 16, [5, 5, 2, 2]);
+  ctx.fill();
+  ctx.fillStyle = "#80f0cf";
+  ctx.beginPath();
+  ctx.roundRect(x, platform.y, platform.width, 6, [5, 5, 1, 1]);
+  ctx.fill();
+  ctx.fillStyle = "rgba(212, 255, 229, .62)";
+  ctx.fillRect(x + 9, platform.y + 2, Math.max(0, platform.width - 18), 1.5);
+
+  ctx.fillStyle = "rgba(13, 25, 48, .42)";
+  for (let mark = x + 18; mark < x + platform.width - 12; mark += 39) {
+    const worldMark = mark + cameraX;
+    const crackY = platform.y + 34 + (Math.floor(worldMark / 39) % 3) * 15;
+    ctx.beginPath();
+    ctx.moveTo(mark, crackY);
+    ctx.lineTo(mark + 8, crackY + 3);
+    ctx.lineTo(mark + 12, crackY - 2);
+    ctx.strokeStyle = "rgba(12, 22, 41, .3)";
+    ctx.lineWidth = 2;
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = "rgba(128, 240, 207, .72)";
+  for (let tuft = x + 20; tuft < x + platform.width - 14; tuft += 47) {
+    const offset = Math.floor((tuft + cameraX) / 47) % 5;
+    ctx.beginPath();
+    ctx.moveTo(tuft, platform.y + 1);
+    ctx.lineTo(tuft + 3, platform.y - 4 - offset);
+    ctx.lineTo(tuft + 5, platform.y + 1);
+    ctx.fill();
   }
 }
 
@@ -186,76 +268,163 @@ function drawCoin(coin, time) {
   ctx.save();
   ctx.translate(x, coin.y + Math.sin(time / 230 + coin.x) * 3);
   ctx.scale(pulse, 1);
-  ctx.fillStyle = "#f7ce68";
+  const glow = ctx.createRadialGradient(0, 0, 2, 0, 0, 25);
+  glow.addColorStop(0, "rgba(255, 224, 128, .42)");
+  glow.addColorStop(1, "rgba(255, 224, 128, 0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(-25, -25, 50, 50);
+  ctx.shadowColor = "#ffd878";
+  ctx.shadowBlur = 15;
+  ctx.fillStyle = "#ffc95e";
   ctx.beginPath();
-  ctx.arc(0, 0, 11, 0, Math.PI * 2);
+  ctx.arc(0, 0, 10, 0, Math.PI * 2);
   ctx.fill();
-  ctx.strokeStyle = "#fff0ad";
-  ctx.lineWidth = 2;
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = "#fff0b5";
+  ctx.lineWidth = 2.5;
   ctx.stroke();
-  ctx.fillStyle = "#fff7d6";
-  ctx.fillRect(-1.5, -6, 3, 12);
+  ctx.fillStyle = "#fff8d9";
+  ctx.beginPath();
+  ctx.moveTo(0, -6);
+  ctx.lineTo(2, -1);
+  ctx.lineTo(6, 0);
+  ctx.lineTo(2, 2);
+  ctx.lineTo(0, 7);
+  ctx.lineTo(-2, 2);
+  ctx.lineTo(-6, 0);
+  ctx.lineTo(-2, -1);
+  ctx.closePath();
+  ctx.fill();
   ctx.restore();
 }
 
-function drawPlayer() {
+function drawPlayer(time) {
   const x = player.x - cameraX;
-  const y = player.y;
+  const walking = player.grounded && player.vx !== 0;
+  const bob = walking ? Math.sin(time / 65) * 1.5 : 0;
+  const y = player.y + bob;
   ctx.save();
   ctx.translate(x + player.width / 2, y);
   ctx.scale(player.facing, 1);
-  ctx.fillStyle = "rgba(34, 50, 78, .18)";
+  ctx.fillStyle = "rgba(9, 16, 34, .35)";
   ctx.beginPath();
-  ctx.ellipse(0, player.height + 3, 18, 5, 0, 0, Math.PI * 2);
+  ctx.ellipse(0, player.height + 5, 19, 5, 0, 0, Math.PI * 2);
   ctx.fill();
-  ctx.fillStyle = "#f18c75";
+
+  ctx.fillStyle = "#cf536d";
   ctx.beginPath();
-  ctx.roundRect(-15, 14, 30, 31, 10);
+  ctx.moveTo(-8, 20);
+  ctx.lineTo(-23 - Math.abs(player.vx) * 1.1, 26);
+  ctx.lineTo(-17, 38);
+  ctx.lineTo(-10, 34);
+  ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#ffd4a5";
+
+  ctx.fillStyle = "#293858";
   ctx.beginPath();
-  ctx.arc(0, 12, 15, 0, Math.PI * 2);
+  ctx.roundRect(-13, 36, 11, 10, 4);
+  ctx.roundRect(2, 36, 11, 10, 4);
   ctx.fill();
-  ctx.fillStyle = "#283856";
+  ctx.fillStyle = "#91d9de";
+  ctx.fillRect(-12, 43, 10, 3);
+  ctx.fillRect(3, 43, 10, 3);
+
+  const coat = ctx.createLinearGradient(-14, 15, 14, 43);
+  coat.addColorStop(0, "#31b9b0");
+  coat.addColorStop(1, "#237a91");
+  ctx.fillStyle = coat;
   ctx.beginPath();
-  ctx.arc(5, 11, 2, 0, Math.PI * 2);
+  ctx.roundRect(-14, 16, 28, 25, 8);
   ctx.fill();
-  ctx.strokeStyle = "#d86f66";
-  ctx.lineWidth = 2;
+  ctx.fillStyle = "#f5d278";
+  ctx.fillRect(-2, 20, 4, 18);
+  ctx.fillStyle = "#e8a65f";
   ctx.beginPath();
-  ctx.moveTo(3, 18);
-  ctx.quadraticCurveTo(7, 21, 10, 17);
-  ctx.stroke();
-  ctx.fillStyle = "#77ded7";
+  ctx.arc(-11, 28, 4, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#f5d278";
+  ctx.fillRect(3, 25, 5, 3);
+
+  ctx.fillStyle = "#f4bd85";
   ctx.beginPath();
-  ctx.roundRect(-15, 37, 30, 9, 4);
+  ctx.arc(1, 12, 13, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#242b49";
+  ctx.beginPath();
+  ctx.moveTo(-12, 10);
+  ctx.lineTo(-10, -2);
+  ctx.lineTo(-3, 2);
+  ctx.lineTo(3, -4);
+  ctx.lineTo(11, 1);
+  ctx.lineTo(14, 10);
+  ctx.lineTo(8, 8);
+  ctx.lineTo(4, 5);
+  ctx.lineTo(-4, 9);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#fff0cd";
+  ctx.beginPath();
+  ctx.roundRect(-10, 8, 18, 10, [2, 4, 5, 2]);
+  ctx.fill();
+  ctx.fillStyle = "#28314f";
+  ctx.beginPath();
+  ctx.arc(5, 12, 1.8, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#e68270";
+  ctx.beginPath();
+  ctx.moveTo(-9, 19);
+  ctx.lineTo(3, 21);
+  ctx.lineTo(8, 19);
+  ctx.lineTo(4, 25);
+  ctx.lineTo(-7, 23);
+  ctx.closePath();
+  ctx.fill();
+
+  ctx.fillStyle = "#efc75f";
+  ctx.beginPath();
+  ctx.moveTo(-7, 0);
+  ctx.lineTo(0, -9);
+  ctx.lineTo(8, 0);
+  ctx.lineTo(4, 2);
+  ctx.lineTo(0, -3);
+  ctx.lineTo(-4, 2);
+  ctx.closePath();
   ctx.fill();
   ctx.restore();
 }
 
 function drawGoal() {
   const x = WORLD_WIDTH - 155 - cameraX;
-  ctx.fillStyle = "#f3f0df";
-  ctx.fillRect(x, 365, 7, 105);
-  ctx.fillStyle = "#f18470";
+  ctx.fillStyle = "rgba(255, 206, 133, .15)";
   ctx.beginPath();
-  ctx.moveTo(x + 7, 367);
-  ctx.lineTo(x + 60, 381);
-  ctx.lineTo(x + 7, 397);
+  ctx.arc(x + 5, 382, 34, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#d9e5ec";
+  ctx.fillRect(x, 365, 6, 105);
+  ctx.fillStyle = "#fff0c9";
+  ctx.fillRect(x + 1, 365, 2, 105);
+  ctx.fillStyle = "#ec6f76";
+  ctx.beginPath();
+  ctx.moveTo(x + 6, 368);
+  ctx.lineTo(x + 57, 379);
+  ctx.lineTo(x + 47, 391);
+  ctx.lineTo(x + 6, 400);
   ctx.closePath();
   ctx.fill();
-  ctx.fillStyle = "#f5d578";
+  ctx.fillStyle = "#ffd875";
   ctx.beginPath();
-  ctx.arc(x + 3.5, 362, 6, 0, Math.PI * 2);
+  ctx.arc(x + 3, 363, 7, 0, Math.PI * 2);
   ctx.fill();
 }
 
 function render(time) {
-  drawBackground();
+  drawBackground(time);
   for (const platform of platforms) drawPlatform(platform);
   drawGoal();
   for (const coin of coins) drawCoin(coin, time);
-  drawPlayer();
+  drawPlayer(time);
 }
 
 function frame(time) {
