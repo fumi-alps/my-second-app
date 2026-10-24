@@ -35,16 +35,21 @@ const coinSpots = [
   [268, 340], [505, 278], [730, 340], [970, 325],
   [1195, 260], [1435, 325], [1645, 330], [1865, 265],
 ];
+const enemySpots = [
+  { x: 535, minX: 505, maxX: 665, y: 436, width: 36, height: 34, speed: 0.9 },
+];
 
 let player;
 let coins;
+let enemies;
 let cameraX = 0;
 let won = false;
 let lastTime = 0;
 
 function resetGame() {
-  player = { x: 70, y: 400, width: 32, height: 46, vx: 0, vy: 0, grounded: false, facing: 1 };
+  player = { x: 70, y: 400, width: 32, height: 46, vx: 0, vy: 0, grounded: false, facing: 1, hitCooldown: 0 };
   coins = coinSpots.map(([x, y]) => ({ x, y, collected: false }));
+  enemies = enemySpots.map((enemy) => ({ ...enemy, direction: 1, defeated: false }));
   cameraX = 0;
   won = false;
   coinCount.textContent = "0";
@@ -73,6 +78,33 @@ function update(delta) {
   player.vy += GRAVITY * step;
   player.y += player.vy * step;
   player.grounded = false;
+
+  player.hitCooldown = Math.max(0, player.hitCooldown - step);
+  for (const enemy of enemies) {
+    if (enemy.defeated) continue;
+    enemy.x += enemy.speed * enemy.direction * step;
+    if (enemy.x <= enemy.minX || enemy.x + enemy.width >= enemy.maxX) {
+      enemy.direction *= -1;
+      enemy.x = Math.max(enemy.minX, Math.min(enemy.maxX - enemy.width, enemy.x));
+    }
+
+    const overlaps = player.x + player.width > enemy.x && player.x < enemy.x + enemy.width;
+    const touches = player.y + player.height > enemy.y && player.y < enemy.y + enemy.height;
+    if (!overlaps || !touches) continue;
+
+    if (player.vy > 0 && previousBottom <= enemy.y + 9) {
+      enemy.defeated = true;
+      player.y = enemy.y - player.height;
+      player.vy = JUMP_SPEED * 0.58;
+      gameMessage.textContent = "敵をふみつけた！";
+    } else if (player.hitCooldown === 0) {
+      player.vx = -enemy.direction * 5.5;
+      player.vy = -5.5;
+      player.grounded = false;
+      player.hitCooldown = 48;
+      gameMessage.textContent = "敵にぶつかった！ジャンプでよけよう";
+    }
+  }
 
   if (player.vy >= 0) {
     for (const platform of platforms) {
@@ -298,6 +330,63 @@ function drawCoin(coin, time) {
   ctx.restore();
 }
 
+function drawEnemy(enemy, time) {
+  if (enemy.defeated) return;
+  const x = enemy.x - cameraX;
+  if (x + enemy.width < -20 || x > WIDTH + 20) return;
+  const bob = Math.sin(time / 130 + enemy.x) * 1.5;
+  ctx.save();
+  ctx.translate(x + enemy.width / 2, enemy.y + bob);
+  ctx.scale(enemy.direction, 1);
+
+  ctx.fillStyle = "rgba(9, 16, 34, .3)";
+  ctx.beginPath();
+  ctx.ellipse(0, enemy.height + 2, 19, 4, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#342b55";
+  ctx.beginPath();
+  ctx.moveTo(-17, 25);
+  ctx.lineTo(-21, 10);
+  ctx.lineTo(-12, 14);
+  ctx.lineTo(-7, 4);
+  ctx.lineTo(0, 12);
+  ctx.lineTo(8, 3);
+  ctx.lineTo(12, 14);
+  ctx.lineTo(20, 9);
+  ctx.lineTo(15, 27);
+  ctx.quadraticCurveTo(0, 36, -17, 25);
+  ctx.fill();
+
+  ctx.fillStyle = "#ec6879";
+  ctx.beginPath();
+  ctx.ellipse(1, 21, 14, 12, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#ff9a88";
+  ctx.beginPath();
+  ctx.ellipse(-3, 17, 8, 4, -.2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "#fff0d1";
+  ctx.beginPath();
+  ctx.ellipse(5, 19, 4, 5, 0, 0, Math.PI * 2);
+  ctx.fill();
+  ctx.fillStyle = "#252744";
+  ctx.beginPath();
+  ctx.arc(7, 20, 2, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.strokeStyle = "#f3bd68";
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(-6, 30);
+  ctx.lineTo(-10, 33);
+  ctx.moveTo(7, 30);
+  ctx.lineTo(11, 33);
+  ctx.stroke();
+  ctx.restore();
+}
+
 function drawPlayer(time) {
   const x = player.x - cameraX;
   const walking = player.grounded && player.vx !== 0;
@@ -424,6 +513,7 @@ function render(time) {
   for (const platform of platforms) drawPlatform(platform);
   drawGoal();
   for (const coin of coins) drawCoin(coin, time);
+  for (const enemy of enemies) drawEnemy(enemy, time);
   drawPlayer(time);
 }
 
