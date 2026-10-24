@@ -1,11 +1,67 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#101b35">
+  <title>SKYBOUND — 横スクロールアクション</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="game.js" defer></script>
 </head>
 <body>
-    ようこそ私のページへ！
+  <main class="game-shell">
+    <header class="topbar">
+      <a class="brand" href="#" aria-label="SKYBOUND ホーム">
+        <span class="brand-mark" aria-hidden="true">✦</span>
+        <span>SKYBOUND</span>
+      </a>
+      <div class="topbar-note"><span class="status-dot"></span> ぼうけんの時間</div>
+    </header>
+
+    <section class="intro" aria-labelledby="game-title">
+      <p class="eyebrow">A LITTLE PLATFORM ADVENTURE</p>
+      <h1 id="game-title">雲のむこうへ。</h1>
+      <p class="subtitle">コインを集めて、ゴールの旗を目指そう！</p>
+    </section>
+
+    <section class="game-card" aria-label="ゲーム">
+      <div class="game-hud">
+        <div class="hud-item">
+          <span class="hud-label">COINS</span>
+          <span class="coin-count"><span aria-hidden="true">✦</span> <span id="coin-count">0</span><span class="coin-total"> / 8</span></span>
+        </div>
+        <p id="game-message" class="game-message" aria-live="polite">旗まで進もう！</p>
+        <button id="restart-button" class="restart-button" type="button" aria-label="ゲームを最初からやり直す">↻ <span>やり直す</span></button>
+      </div>
+
+      <div class="canvas-wrap">
+        <canvas id="game" width="960" height="540" aria-label="横スクロールアクションゲーム。左右に移動し、ジャンプしてコインを集めます。">
+          このゲームを遊ぶには、Canvasに対応したブラウザーが必要です。
+        </canvas>
+        <div id="result-overlay" class="result-overlay" hidden>
+          <div class="result-card">
+            <span class="result-icon" aria-hidden="true">🏁</span>
+            <p class="eyebrow">ADVENTURE COMPLETE</p>
+            <h2>ゴール！</h2>
+            <p id="result-copy">コインを集めてゴールしました。</p>
+            <button id="play-again-button" class="play-again-button" type="button">もう一度あそぶ <span aria-hidden="true">→</span></button>
+          </div>
+        </div>
+      </div>
+
+      <div class="game-footer">
+        <p><kbd>←</kbd><kbd>→</kbd> または <kbd>A</kbd><kbd>D</kbd> で移動 <span class="footer-divider">·</span> <kbd>Space</kbd> でジャンプ</p>
+        <span class="level-label">WORLD 01 <span aria-hidden="true">—</span> SKY ISLAND</span>
+      </div>
+    </section>
+
+    <nav class="touch-controls" aria-label="ゲーム操作">
+      <button type="button" class="control-button" data-control="left" aria-label="左へ移動">←</button>
+      <button type="button" class="control-button jump-button" data-control="jump" aria-label="ジャンプ">JUMP <span aria-hidden="true">↑</span></button>
+      <button type="button" class="control-button" data-control="right" aria-label="右へ移動">→</button>
+    </nav>
+
+    <footer class="page-footer">小さな一歩から、冒険ははじまる。</footer>
+  </main>
 </body>
 </html>

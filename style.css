@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+:root {
+  color-scheme: dark;
+  font-family: "Nunito", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+  color: #f4f6ff;
+  background: #101b35;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  --muted: #9ba9c7;
+  --cyan: #74e0dd;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  min-width: 320px;
+  min-height: 100vh;
+  margin: 0;
+  background:
+    radial-gradient(ellipse at 50% 42%, rgba(49, 79, 132, .23), transparent 54%),
+    #101b35;
+}
+
+button, a { font: inherit; }
+button { color: inherit; }
+
+.game-shell {
+  width: min(100% - 40px, 1056px);
+  margin: 0 auto;
+}
+
+.topbar {
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(180, 199, 238, .11);
+}
+
+.brand {
+  display: inline-flex;
+  gap: 10px;
+  align-items: center;
+  color: #f4f6ff;
+  font-size: 13px;
+  font-weight: 900;
+  letter-spacing: .16em;
+  text-decoration: none;
+}
+
+.brand-mark { color: #fbdc83; font-size: 20px; }
+.topbar-note { color: var(--muted); font-size: 12px; letter-spacing: .04em; }
+.status-dot { display: inline-block; width: 7px; height: 7px; margin: 0 7px 1px 0; border-radius: 50%; background: #7ee2b8; box-shadow: 0 0 10px #7ee2b8; }
+
+.intro { padding: 43px 0 27px; text-align: center; }
+.eyebrow { margin: 0 0 9px; color: #83dcd8; font: 500 10px/1.4 "DM Mono", monospace; letter-spacing: .2em; }
+h1 { margin: 0; font-size: clamp(29px, 5vw, 43px); font-weight: 900; letter-spacing: .04em; }
+.subtitle { margin: 9px 0 0; color: #aab6d0; font-size: 14px; }
+
+.game-card {
+  overflow: hidden;
+  border: 1px solid rgba(193, 210, 245, .17);
+  border-radius: 15px;
+  background: #182644;
+  box-shadow: 0 24px 70px rgba(3, 9, 23, .3), 0 1px 0 rgba(255,255,255,.04) inset;
+}
+
+.game-hud { height: 69px; display: flex; align-items: center; justify-content: space-between; padding: 0 23px; }
+.hud-item { display: flex; align-items: center; gap: 12px; }
+.hud-label, .level-label { color: #8c9ab8; font: 500 10px "DM Mono", monospace; letter-spacing: .12em; }
+.coin-count { color: #f6d77b; font-size: 16px; font-weight: 900; }
+.coin-count > span:first-child { margin-right: 5px; }
+.coin-total { color: #9ba9c7; font-size: 12px; font-weight: 700; }
+.game-message { margin: 0; color: #b8c4dd; font-size: 13px; }
+.restart-button { padding: 8px 10px; border: 1px solid rgba(193, 210, 245, .16); border-radius: 8px; background: transparent; color: #c5d0e5; cursor: pointer; font-size: 13px; }
+.restart-button:hover { border-color: rgba(193, 210, 245, .4); background: rgba(255,255,255,.04); }
+.restart-button span { margin-left: 3px; font-size: 11px; }
+
+.canvas-wrap { position: relative; overflow: hidden; background: #94c9e1; }
+canvas { display: block; width: 100%; height: auto; aspect-ratio: 16 / 9; }
+
+.result-overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgba(13, 25, 49, .48); backdrop-filter: blur(5px); }
+.result-overlay[hidden] { display: none; }
+.result-card { width: min(85%, 360px); padding: 27px; border: 1px solid rgba(223, 233, 255, .2); border-radius: 15px; background: rgba(24, 38, 68, .96); text-align: center; box-shadow: 0 18px 60px rgba(8, 18, 39, .35); }
+.result-icon { display: block; margin-bottom: 10px; font-size: 34px; }
+.result-card h2 { margin: 0; font-size: 30px; }
+.result-card > p:not(.eyebrow) { margin: 8px 0 19px; color: #b5c2dc; font-size: 13px; }
+.play-again-button { padding: 11px 17px; border: 0; border-radius: 8px; background: #77ded7; color: #10263c; cursor: pointer; font-size: 13px; font-weight: 900; }
+.play-again-button span { padding-left: 8px; }
+.play-again-button:hover { background: #99eee5; }
+
+.game-footer { min-height: 52px; display: flex; align-items: center; justify-content: space-between; padding: 0 23px; }
+.game-footer p { margin: 0; color: #a9b6d0; font-size: 11px; }
+kbd { display: inline-grid; min-width: 20px; height: 21px; margin: 0 2px; padding: 0 5px; place-items: center; border: 1px solid rgba(191, 208, 242, .2); border-radius: 5px; background: rgba(7, 16, 35, .3); color: #e2e9f7; font: 10px "DM Mono", monospace; }
+.footer-divider { padding: 0 6px; color: #62718e; }
+.touch-controls { display: none; }
+.page-footer { padding: 22px 0 30px; color: #72819e; font-size: 11px; text-align: center; letter-spacing: .06em; }
+
+@media (max-width: 640px) {
+  .game-shell { width: min(100% - 24px, 520px); }
+  .topbar { height: 62px; }
+  .intro { padding: 32px 0 22px; }
+  .subtitle { font-size: 12px; }
+  .game-card { border-radius: 11px; }
+  .game-hud { height: 58px; padding: 0 12px; }
+  .hud-item { gap: 7px; }
+  .hud-label { font-size: 9px; }
+  .game-message { max-width: 115px; font-size: 10px; text-align: center; }
+  .restart-button { padding: 7px 8px; }
+  .restart-button span { display: none; }
+  .game-footer { min-height: 43px; padding: 0 10px; }
+  .game-footer p { font-size: 9px; }
+  kbd { min-width: 18px; height: 18px; margin: 0 1px; padding: 0 3px; font-size: 8px; }
+  .level-label { font-size: 8px; }
+  .footer-divider { padding: 0 2px; }
+  .touch-controls { display: flex; justify-content: center; gap: 13px; padding: 17px 0 0; }
+  .control-button { width: 57px; height: 49px; border: 1px solid rgba(193, 210, 245, .2); border-radius: 12px; background: #1a2948; color: #e6edfb; font-size: 22px; font-weight: 800; touch-action: none; user-select: none; }
+  .control-button:active, .control-button.is-pressed { border-color: #74e0dd; background: #263e61; }
+  .jump-button { width: 96px; color: #82e2dc; font-size: 12px; letter-spacing: .08em; }
+  .jump-button span { margin-left: 6px; font-size: 18px; vertical-align: -1px; }
+  .page-footer { padding-top: 20px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; }
+}
